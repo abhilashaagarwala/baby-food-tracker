@@ -1,6 +1,6 @@
 # ── Configuration ────────────────────────────────────────────────────────────
 $RG         = "baby-food-tracker-rg"
-$LOCATION   = "eastus"
+$LOCATION   = "westus2"
 $VM_NAME    = "baby-db-vm"
 $VM_USER    = "azureuser"
 $ACR_NAME   = "babyfoodtrackeracr"   # must be globally unique — change if taken
