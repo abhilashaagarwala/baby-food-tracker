@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Baby Food Tracker</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 16px; }
+    h1 { color: #e07b54; }
+    input, textarea { width: 100%; padding: 8px; margin: 4px 0 12px; box-sizing: border-box; }
+    button { background: #e07b54; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
+    button:hover { background: #c4613c; }
+    .entry { border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin: 8px 0; display: flex; justify-content: space-between; align-items: flex-start; }
+    .entry-info { flex: 1; }
+    .date { font-weight: bold; color: #e07b54; }
+    .del { background: none; color: #aaa; border: none; font-size: 18px; cursor: pointer; padding: 0 4px; }
+    .del:hover { color: #e07b54; }
+  </style>
+</head>
+<body>
+  <h1>🍼 Baby Food Tracker</h1>
+
+  <label>Date</label>
+  <input type="date" id="meal-date" />
+  <label>What did baby eat?</label>
+  <textarea id="meal-items" rows="3" placeholder="e.g. oatmeal, mashed banana, breast milk"></textarea>
+  <button onclick="addMeal()">Add Entry</button>
+
+  <h2>History</h2>
+  <div id="entries"></div>
+
+  <script>
+    async function loadMeals() {
+      const res = await fetch('/meals');
+      const meals = await res.json();
+      const el = document.getElementById('entries');
+      el.innerHTML = meals.length === 0 ? '<p>No entries yet.</p>' : meals.map(m => `
+        <div class="entry">
+          <div class="entry-info">
+            <div class="date">${m.meal_date}</div>
+            <div>${m.items}</div>
+          </div>
+          <button class="del" onclick="deleteMeal(${m.id})">✕</button>
+        </div>
+      `).join('');
+    }
+
+    async function addMeal() {
+      const meal_date = document.getElementById('meal-date').value;
+      const items = document.getElementById('meal-items').value.trim();
+      if (!meal_date || !items) return alert('Please fill in both fields.');
+      await fetch('/meals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ meal_date, items })
+      });
+      document.getElementById('meal-items').value = '';
+      loadMeals();
+    }
+
+    async function deleteMeal(id) {
+      await fetch(`/meals/${id}`, { method: 'DELETE' });
+      loadMeals();
+    }
+
+    loadMeals();
+  </script>
+</body>
+</html>

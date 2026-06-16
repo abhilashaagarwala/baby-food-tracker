@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: baby-food-tracker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: baby-food-tracker
+  template:
+    metadata:
+      labels:
+        app: baby-food-tracker
+    spec:
+      containers:
+        - name: baby-food-tracker
+          image: baby-food-tracker:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              value: postgresql://babyapp:babypass@postgres:5432/babyfoods
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: baby-food-tracker
+spec:
+  type: NodePort
+  selector:
+    app: baby-food-tracker
+  ports:
+    - port: 8000
+      targetPort: 8000
+      nodePort: 30080
