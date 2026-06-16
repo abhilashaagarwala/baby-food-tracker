@@ -20,7 +20,7 @@ spec:
             - containerPort: 8000
           env:
             - name: DATABASE_URL
-              value: postgresql://babyapp:babypass@postgres:5432/babyfoods
+              value: postgresql://babyapp:babypass@POSTGRES_VM_IP:5432/babyfoods
 ---
 apiVersion: v1
 kind: Service
