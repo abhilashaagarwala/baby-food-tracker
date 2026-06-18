@@ -2,92 +2,311 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Baby Food Tracker</title>
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 16px; }
-    h1 { color: #e07b54; }
-    label { font-size: 14px; color: #555; }
-    input { width: 100%; padding: 8px; margin: 4px 0 12px; box-sizing: border-box; }
-    button { background: #e07b54; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
-    button:hover { background: #c4613c; }
-    .counter { font-size: 18px; font-weight: bold; color: #e07b54; margin: 16px 0 8px; }
-    .counter span { font-size: 32px; }
-    .alert { background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; display: none; }
-    .entry { border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin: 8px 0; display: flex; justify-content: space-between; align-items: center; }
-    .date { font-weight: bold; color: #e07b54; margin-right: 12px; }
-    .del { background: none; color: #aaa; border: none; font-size: 18px; cursor: pointer; padding: 0 4px; }
-    .del:hover { color: #e07b54; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #fdf9f6; color: #333; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── Top bar ── */
+    .topbar { padding: 14px 20px; background: #fff; border-bottom: 1px solid #f0ebe6; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 12px; flex-wrap: wrap; }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    h1 { color: #e07b54; font-size: 18px; white-space: nowrap; }
+    .progress-wrap { background: #eee; border-radius: 20px; height: 8px; width: 140px; }
+    .progress-bar { background: #e07b54; border-radius: 20px; height: 8px; transition: width 0.4s; }
+    .progress-label { font-size: 12px; color: #aaa; white-space: nowrap; }
+    .auth-area { display: flex; align-items: center; gap: 8px; }
+    .readonly-badge { background: #f5f5f5; color: #aaa; font-size: 11px; padding: 3px 9px; border-radius: 20px; border: 1px solid #eee; }
+    .edit-badge { background: #fff3ee; color: #e07b54; font-size: 11px; padding: 3px 9px; border-radius: 20px; border: 1px solid #f0c4b0; }
+    .btn-primary { background: #e07b54; color: white; border: none; padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+    .btn-primary:hover { background: #c4613c; }
+    .btn-secondary { background: none; color: #aaa; border: 1px solid #ddd; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+    .btn-secondary:hover { color: #e07b54; border-color: #e07b54; }
+
+    /* ── Legend ── */
+    .legend { padding: 8px 20px; background: #fff8f5; border-bottom: 1px solid #f0ebe6; display: flex; gap: 16px; flex-shrink: 0; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #aaa; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-untried { background: #ddd; }
+    .dot-tried { background: #e07b54; }
+    .dot-liked { background: #2e9e52; }
+    .dot-not-liked { background: #d94f4f; }
+
+    /* ── Board ── */
+    .board { display: flex; gap: 12px; padding: 16px 20px; overflow-x: auto; flex: 1; align-items: flex-start; }
+    .board::-webkit-scrollbar { height: 6px; }
+    .board::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+
+    .column { background: #f2ede9; border-radius: 12px; width: 240px; flex-shrink: 0; display: flex; flex-direction: column; max-height: 100%; }
+    .col-header { padding: 12px 14px 10px; border-bottom: 1px solid #e5ddd8; }
+    .col-title { font-weight: 700; color: #e07b54; font-size: 13px; }
+    .col-meta { font-size: 11px; color: #bbb; margin-top: 2px; }
+    .col-body { padding: 10px; overflow-y: auto; flex: 1; }
+    .col-body::-webkit-scrollbar { width: 4px; }
+    .col-body::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+
+    .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #bbb; margin: 10px 0 5px; padding: 0 2px; }
+    .section-label:first-child { margin-top: 0; }
+
+    /* ── Food cards ── */
+    .food-card { background: #fff; border-radius: 8px; padding: 8px 10px; margin-bottom: 5px; border-left: 3px solid transparent; }
+    .food-card.untried { border-left-color: #ddd; }
+    .food-card.tried { border-left-color: #e07b54; }
+    .food-card.liked { border-left-color: #2e9e52; background: #f6fdf8; }
+    .food-card.not_liked { border-left-color: #d94f4f; background: #fef9f9; }
+
+    .food-name { font-size: 13px; color: #444; margin-bottom: 6px; }
+    .food-card.liked .food-name { color: #2e9e52; }
+    .food-card.not_liked .food-name { color: #d94f4f; }
+    .food-card.tried .food-name { color: #e07b54; }
+
+    .card-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+    .action-btn { padding: 3px 8px; border-radius: 12px; border: none; cursor: pointer; font-size: 11px; font-weight: 600; white-space: nowrap; }
+    .btn-try { background: #fff3ee; color: #e07b54; border: 1px solid #f0c4b0; }
+    .btn-try:hover { background: #e07b54; color: white; }
+    .btn-liked { background: #edfbf0; color: #2e9e52; border: 1px solid #b4e8c2; }
+    .btn-liked:hover { background: #2e9e52; color: white; }
+    .btn-not-liked { background: #fef2f2; color: #d94f4f; border: 1px solid #f5c0c0; }
+    .btn-not-liked:hover { background: #d94f4f; color: white; }
+    .btn-del { background: #f5f5f5; color: #bbb; border: 1px solid #eee; }
+    .btn-del:hover { background: #eee; color: #888; }
+
+    /* ── Add food ── */
+    .add-food { display: flex; gap: 5px; margin-top: 10px; }
+    .add-food input { flex: 1; padding: 6px 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px; outline: none; background: #fff; min-width: 0; }
+    .add-food input:focus { border-color: #e07b54; }
+    .add-food button { background: #e07b54; color: white; border: none; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; white-space: nowrap; }
+
+    /* ── Login modal ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 14px; padding: 28px; width: 100%; max-width: 320px; }
+    .modal h2 { color: #e07b54; margin-bottom: 18px; font-size: 16px; }
+    .modal label { font-size: 12px; color: #888; display: block; margin-bottom: 4px; }
+    .modal input { width: 100%; padding: 9px 12px; border: 1px solid #eee; border-radius: 8px; font-size: 14px; margin-bottom: 12px; outline: none; }
+    .modal input:focus { border-color: #e07b54; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .modal-error { color: #d94f4f; font-size: 12px; margin-bottom: 10px; display: none; }
   </style>
 </head>
 <body>
-  <h1>🍼 Baby Food Tracker</h1>
 
-  <div class="counter">New foods introduced: <span id="food-count">0</span></div>
-
-  <label>Date</label>
-  <input type="date" id="meal-date" />
-  <label>Food item</label>
-  <input type="text" id="meal-item" placeholder="e.g. mashed banana" />
-
-  <div class="alert" id="already-eaten">
-    👶 Baby's eaten this before!
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>🍼 Ruhi's Food Journey</h1>
+      <div class="progress-wrap"><div class="progress-bar" id="prog-bar" style="width:0%"></div></div>
+      <span class="progress-label" id="prog-label">Loading...</span>
+    </div>
+    <div class="auth-area" id="auth-area"></div>
   </div>
 
-  <button onclick="addMeal()">Add Entry</button>
+  <div class="legend">
+    <div class="legend-item"><div class="dot dot-untried"></div> Not tried</div>
+    <div class="legend-item"><div class="dot dot-tried"></div> Tried</div>
+    <div class="legend-item"><div class="dot dot-liked"></div> Liked</div>
+    <div class="legend-item"><div class="dot dot-not-liked"></div> Not liked</div>
+  </div>
 
-  <h2>History</h2>
-  <div id="entries"></div>
+  <div class="board" id="board"></div>
+
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <h2>🔒 Login to Edit</h2>
+      <label>Username</label>
+      <input type="text" id="login-user" placeholder="Username" />
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()" />
+      <div class="modal-error" id="login-error">Invalid username or password.</div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeLogin()">Cancel</button>
+        <button class="btn-primary" onclick="doLogin()">Login</button>
+      </div>
+    </div>
+  </div>
 
   <script>
-    async function loadMeals() {
-      const [mealsRes, countRes] = await Promise.all([fetch('/meals'), fetch('/meals/count')]);
-      const meals = await mealsRes.json();
-      const { unique_foods } = await countRes.json();
+    let token = localStorage.getItem('baby_token');
+    let isAuth = false;
+    let colScrolls = {};
 
-      document.getElementById('food-count').textContent = unique_foods;
-
-      const el = document.getElementById('entries');
-      el.innerHTML = meals.length === 0 ? '<p>No entries yet.</p>' : meals.map(m => `
-        <div class="entry">
-          <span class="date">${m.meal_date}</span>
-          <span style="flex:1">${m.item}</span>
-          <button class="del" onclick="deleteMeal(${m.id})">✕</button>
-        </div>
-      `).join('');
+    async function checkAuth() {
+      if (!token) { isAuth = false; renderAuthUI(); return; }
+      const res = await fetch('/auth/check', { headers: { Authorization: 'Bearer ' + token } });
+      const { authenticated } = await res.json();
+      isAuth = authenticated;
+      if (!isAuth) { token = null; localStorage.removeItem('baby_token'); }
+      renderAuthUI();
     }
 
-    async function addMeal() {
-      const meal_date = document.getElementById('meal-date').value;
-      const item = document.getElementById('meal-item').value.trim();
-      if (!meal_date || !item) return alert('Please fill in both fields.');
+    function renderAuthUI() {
+      const area = document.getElementById('auth-area');
+      if (isAuth) {
+        area.innerHTML = `<span class="edit-badge">✏️ Edit mode</span><button class="btn-secondary" onclick="logout()">Logout</button>`;
+      } else {
+        area.innerHTML = `<span class="readonly-badge">👀 Read-only</span><button class="btn-primary" onclick="openLogin()">Login to Edit</button>`;
+      }
+    }
 
-      const res = await fetch('/meals', {
+    function openLogin() { document.getElementById('modal').classList.add('open'); setTimeout(() => document.getElementById('login-user').focus(), 100); }
+    function closeLogin() { document.getElementById('modal').classList.remove('open'); document.getElementById('login-error').style.display = 'none'; }
+
+    async function doLogin() {
+      const username = document.getElementById('login-user').value;
+      const password = document.getElementById('login-pass').value;
+      const res = await fetch('/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ meal_date, item })
+        body: JSON.stringify({ username, password })
       });
-      const data = await res.json();
-
-      const alertEl = document.getElementById('already-eaten');
-      if (data.already_eaten) {
-        alertEl.style.display = 'block';
+      if (res.ok) {
+        const { token: t } = await res.json();
+        token = t; localStorage.setItem('baby_token', token);
+        isAuth = true; closeLogin(); renderAuthUI(); load();
       } else {
-        alertEl.style.display = 'none';
+        document.getElementById('login-error').style.display = 'block';
+      }
+    }
+
+    function logout() {
+      token = null; isAuth = false;
+      localStorage.removeItem('baby_token');
+      renderAuthUI(); load();
+    }
+
+    function saveScrolls() {
+      document.querySelectorAll('.col-body').forEach(el => {
+        colScrolls[el.id] = el.scrollTop;
+      });
+    }
+
+    function restoreScrolls() {
+      document.querySelectorAll('.col-body').forEach(el => {
+        if (colScrolls[el.id] !== undefined) el.scrollTop = colScrolls[el.id];
+      });
+    }
+
+    async function load() {
+      saveScrolls();
+      const res = await fetch('/foods');
+      const allFoods = await res.json();
+
+      let total = 0, tried = 0;
+      for (const foods of Object.values(allFoods)) {
+        total += foods.length;
+        tried += foods.filter(f => f.status).length;
+      }
+      const pct = total ? Math.round((tried / total) * 100) : 0;
+      document.getElementById('prog-bar').style.width = pct + '%';
+      document.getElementById('prog-label').textContent = `${tried} of ${total} introduced`;
+
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+
+      for (const [category, foods] of Object.entries(allFoods)) {
+        const untried  = foods.filter(f => !f.status);
+        const triedF   = foods.filter(f => f.status === 'tried');
+        const liked    = foods.filter(f => f.status === 'liked');
+        const notLiked = foods.filter(f => f.status === 'not_liked');
+        const triedCount = foods.filter(f => f.status).length;
+        const colId = 'col-' + category.replace(/[^a-z0-9]/gi, '_');
+
+        const col = document.createElement('div');
+        col.className = 'column';
+        col.innerHTML = `
+          <div class="col-header">
+            <div class="col-title">${category}</div>
+            <div class="col-meta">${triedCount} / ${foods.length} introduced</div>
+          </div>
+          <div class="col-body" id="${colId}">
+            ${cardSection('Not Tried', untried, category, true)}
+            ${cardSection('Tried', triedF, category, false)}
+            ${cardSection('Liked', liked, category, false)}
+            ${cardSection('Not Liked', notLiked, category, false)}
+            ${isAuth ? `
+              <div class="add-food">
+                <input type="text" id="input-${colId}" placeholder="Add food..." />
+                <button onclick="addFood('${category}','${colId}')">+</button>
+              </div>` : ''}
+          </div>`;
+        board.appendChild(col);
       }
 
-      document.getElementById('meal-item').value = '';
-      loadMeals();
+      restoreScrolls();
     }
 
-    async function deleteMeal(id) {
-      await fetch(`/meals/${id}`, { method: 'DELETE' });
-      document.getElementById('already-eaten').style.display = 'none';
-      loadMeals();
+    function cardSection(label, foods, category, isUntried) {
+      if (!foods.length) return '';
+      return `
+        <div class="section-label">${label}</div>
+        ${foods.map(f => card(f, category, isUntried)).join('')}`;
     }
 
-    // set today's date as default
-    document.getElementById('meal-date').valueAsDate = new Date();
-    loadMeals();
+    function card(f, category, isUntried) {
+      const status = f.status || 'untried';
+      const enc = encodeURIComponent(f.food);
+      let actions = '';
+      if (isAuth) {
+        if (isUntried) {
+          actions = `
+            <button class="action-btn btn-try" onclick="setStatus('${enc}','tried','${category}')">✓ Tried</button>
+            <button class="action-btn btn-del" onclick="removeStatus('${enc}')">✕</button>`;
+        } else if (status === 'tried') {
+          actions = `
+            <button class="action-btn btn-liked" onclick="setStatus('${enc}','liked','${category}')">👍 Liked</button>
+            <button class="action-btn btn-not-liked" onclick="setStatus('${enc}','not_liked','${category}')">👎 Nope</button>
+            <button class="action-btn btn-del" onclick="removeStatus('${enc}')">✕</button>`;
+        } else {
+          const toggle = status === 'liked' ? 'not_liked' : 'liked';
+          const toggleLabel = status === 'liked' ? '👎 Nope' : '👍 Liked';
+          const toggleClass = status === 'liked' ? 'btn-not-liked' : 'btn-liked';
+          actions = `
+            <button class="action-btn ${toggleClass}" onclick="setStatus('${enc}','${toggle}','${category}')">${toggleLabel}</button>
+            <button class="action-btn btn-del" onclick="removeStatus('${enc}')">✕</button>`;
+        }
+      }
+      return `
+        <div class="food-card ${status}">
+          <div class="food-name">${f.food}</div>
+          ${actions ? `<div class="card-actions">${actions}</div>` : ''}
+        </div>`;
+    }
+
+    async function setStatus(food, status, category) {
+      await fetch(`/foods/${food}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ status, category })
+      });
+      load();
+    }
+
+    async function removeStatus(food) {
+      await fetch(`/foods/${food}/status`, { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } });
+      load();
+    }
+
+    async function addFood(category, colId) {
+      const input = document.getElementById('input-' + colId);
+      const food = input.value.trim();
+      if (!food) return;
+      await fetch('/foods/custom', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ food, category })
+      });
+      input.value = '';
+      load();
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.id.startsWith('input-col-')) {
+        const colId = e.target.id.replace('input-', '');
+        const category = colId.replace(/^col_/, '').replace(/_/g, ' ');
+        addFood(category, colId);
+      }
+    });
+
+    checkAuth().then(() => load());
   </script>
 </body>
 </html>
